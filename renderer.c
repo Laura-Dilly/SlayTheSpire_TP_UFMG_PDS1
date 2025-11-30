@@ -44,10 +44,17 @@ void FillRenderer(Renderer* renderer) {
 
   renderer->font = al_create_builtin_font();
   must_init(renderer->font, "font");
+
+  renderer->combate = malloc(sizeof(controleCombate));
+  must_init(renderer->combate != NULL, "control structure (controleCombate)");
+
+  renderer->combate->estado = TURNO_JOGADOR;
+  renderer->combate->nivel = 0;
+
 }
 
 void RenderBackground(Renderer* renderer) {
-  al_clear_to_color(al_map_rgb(0, 0, 0));
+  al_clear_to_color(al_map_rgb(173,216,230));
 }
 
 void RenderDeck(Renderer* renderer, int x_left, int y_top) {

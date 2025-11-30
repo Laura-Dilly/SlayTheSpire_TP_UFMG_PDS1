@@ -17,7 +17,7 @@
 #define DECK_WIDTH 80
 #define DECK_HEIGHT 80
 
-#define PLAYER_BEGIN_X 300
+#define PLAYER_BEGIN_X 500
 #define PLAYER_BEGIN_Y 375
 #define PLAYER_RADIUS 100
 
@@ -38,5 +38,71 @@ typedef enum {
   MOVE_LEFT = 0,
   MOVE_RIGHT = 1,
 } CursorMovementDirection;
+
+// Definindo as cartas e seus tipos, além do grupoCarta (baralho)
+typedef enum { 
+  ATAQUE, 
+  DEFESA, 
+  ESPECIAL 
+} CartaTipo;
+
+typedef struct {
+  char *tipo;
+  int custo;
+  int efeito;
+} Carta;
+
+typedef struct {
+  Carta carta;
+  int tam;       //Tamanho da pilha
+} grupoCarta;
+
+
+// Definindo a base dos jogadores, bem como jogador e inimigo
+typedef struct {
+  int ptsVida;
+  int ptsEscudo;
+} Criatura;
+
+typedef struct {
+  Criatura player;
+  grupoCarta mao;       // baralho atual do jogador
+  grupoCarta descarte;  // baralho descartado pelo jogador
+} Jogador;
+
+typedef enum { 
+  FRACO, 
+  FORTE 
+} inimigoTipo;
+
+typedef struct {
+  Criatura enemy;
+  inimigoTipo tipo;
+  char **acoes;
+} Inimigo;
+
+typedef struct {
+  int qtd;    //Quantidade de inimigos
+  Inimigo inimigos[];
+} grupoInimigos;
+
+// Definindo o Controle do jogo [Situação]
+typedef struct {
+  char *estado;
+  Jogador jog_atv;
+  grupoInimigos inim_atv;
+  int nivel;    // Contador do núm de combates ou nível
+} controleCombate;
+
+
+
+
+
+
+
+
+
+
+
 
 #endif

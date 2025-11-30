@@ -2,7 +2,7 @@ clean:
 	rm *.out
 
 game:
-	gcc main.c -o game.out \
+	gcc main.c -o game.exe \
 		utils.c \
 		renderer.c \
 		-lm -g\
@@ -12,7 +12,7 @@ game:
 		 --libs --cflags`
 
 game-win:
-	gcc main.c -o game.out \
+	gcc main.c -o game.exe \
 		utils.c \
 		renderer.c \
 		-lm -g\
