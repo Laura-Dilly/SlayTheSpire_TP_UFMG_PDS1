@@ -240,6 +240,14 @@ grupoCarta *geraBaralhoInicial (void){
 
 }
 
+// Função Auxiliar: Cria uma pilha vazia (para mão e descarte)
+grupoCarta* criaPilhaVazia() {
+    grupoCarta *gc = (grupoCarta *) malloc(sizeof(grupoCarta));
+    gc->tam = 0;
+    gc->cartas = NULL; // Ainda não tem cartas
+    return gc;
+}
+
 void liberaBaralho(grupoCarta *baralho) {
     if (baralho == NULL) return;
 

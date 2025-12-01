@@ -7,6 +7,8 @@
 #include "constants.h"
 #include "renderer.h"
 #include "utils.h"
+#include "deck_logic.h"
+#include "creatures_logic.h"
 
 int main() {
   must_init(al_init(), "allegro");

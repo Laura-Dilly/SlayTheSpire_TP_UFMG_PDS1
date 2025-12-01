@@ -1,6 +1,8 @@
 #ifndef _CONSTANTS_H_
 #define _CONSTANTS_H_
 
+#include <allegro5/allegro.h>
+
 #define GAME_KEY_SEEN 1
 #define GAME_KEY_DOWN 2
 
@@ -70,17 +72,20 @@ typedef struct {
 // Definindo a base dos jogadores, bem como jogador e inimigo
 typedef struct {
   char *nome;
+  ALLEGRO_BITMAP *img;
   int ptsVida;
-  int maxVida;
+  int vidaMax;
   int ptsEscudo;
-  int coord_x;
-  int coord_y;
 } Criatura;
 
 typedef struct {
   Criatura player;
-  grupoCarta mao;       // baralho atual do jogador
-  grupoCarta descarte;  // baralho descartado pelo jogador
+  int energia;
+  int energiaMax;
+  grupoCarta *pilha;         // pilha de compras do jogador
+  grupoCarta *mao;           // baralho atual do jogador
+  grupoCarta *descarte;      // pilha de descarte do jogador
+  int vitorias;             // nº de combates vencidos
 } Jogador;
 
 typedef enum { 
@@ -88,20 +93,29 @@ typedef enum {
   FORTE 
 } inimigoTipo;
 
-typedef enum {
-  TESTE,
-  TESTE2
-} acoes;
+typedef struct {
+    char **nome;
+    char **imag;
+    int totalNomes;
+} NomesInimigos;
+
 
 typedef struct {
-  Criatura enemy;
+  CartaTipo tipoAcao;
+  int custo;
+  int efeito;
+} acao;
+
+typedef struct {
+  Criatura *enemy;
   inimigoTipo tipo;
-  acoes Acao;
+  acao *acoes;
+  int qtdAcoes;
 } Inimigo;
 
 typedef struct {
   int qtd;    //Quantidade de inimigos
-  Inimigo inimigos[];
+  Inimigo *inimigos;
 } grupoInimigos;
 
 // Definindo o Controle do jogo [Situação]
@@ -110,6 +124,8 @@ typedef struct {
   Jogador jog_atv;
   grupoInimigos inim_atv;
   int nivel;    // Contador do núm de combates ou nível
+  int indiceInimigoAtual;
+  NomesInimigos *listainimigos;
 } controleCombate;
 
 
