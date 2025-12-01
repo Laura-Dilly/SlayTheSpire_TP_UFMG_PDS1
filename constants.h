@@ -40,6 +40,14 @@ typedef enum {
 } CursorMovementDirection;
 
 // Definindo as cartas e seus tipos, além do grupoCarta (baralho)
+
+typedef struct {
+    char **names;
+    int names_count;
+    char **special_names;
+    int special_count;
+} NomesCartas;
+
 typedef enum { 
   ATAQUE, 
   DEFESA, 
@@ -47,21 +55,26 @@ typedef enum {
 } CartaTipo;
 
 typedef struct {
-  char *tipo;
+  char *nome;
+  CartaTipo tipo;
   int custo;
   int efeito;
 } Carta;
 
 typedef struct {
-  Carta carta;
+  Carta *cartas;
   int tam;       //Tamanho da pilha
 } grupoCarta;
 
 
 // Definindo a base dos jogadores, bem como jogador e inimigo
 typedef struct {
+  char *nome;
   int ptsVida;
+  int maxVida;
   int ptsEscudo;
+  int coord_x;
+  int coord_y;
 } Criatura;
 
 typedef struct {
@@ -75,10 +88,15 @@ typedef enum {
   FORTE 
 } inimigoTipo;
 
+typedef enum {
+  TESTE,
+  TESTE2
+} acoes;
+
 typedef struct {
   Criatura enemy;
   inimigoTipo tipo;
-  char **acoes;
+  acoes Acao;
 } Inimigo;
 
 typedef struct {
@@ -93,16 +111,6 @@ typedef struct {
   grupoInimigos inim_atv;
   int nivel;    // Contador do núm de combates ou nível
 } controleCombate;
-
-
-
-
-
-
-
-
-
-
 
 
 #endif
