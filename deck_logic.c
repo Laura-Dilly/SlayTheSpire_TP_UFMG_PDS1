@@ -267,21 +267,112 @@ void liberaBaralho(grupoCarta *baralho) {
     free(baralho);
 }
 
+
+
 // Lógica de compra e descarte de cartas
 
-void compraCartas (){
-    return;
+// Função para embaralhar cartas (quando tem que recriar a pilha de compras)
+void embaralhaCartas(grupoCarta *baralho) {
+    if (baralho == NULL || baralho->tam <= 1) return;
+
+    for (int i = 0; i < baralho->tam; i++) {
+        
+        int r = rand() % baralho->tam;
+        
+        // Troca as cartas de posição
+        Carta temp = baralho->cartas[i];
+        baralho->cartas[i] = baralho->cartas[r];
+        baralho->cartas[r] = temp;
+    }
 }
 
-void descartaCartas(){
-    return;
+// Move todas as cartas do descarte para a pilha e embaralha
+void reciclaPilha(Jogador *j) {
+    if (j->descarte->tam == 0) return; // Nada para reciclar
+
+    int tamAtual = j->pilha->tam;
+    int tamAdicional = j->descarte->tam;
+    int novoTamanho = tamAtual + tamAdicional;
+
+    // Realoca a pilha de compras para caber as cartas do descarte
+    j->pilha->cartas = (Carta *) realloc(j->pilha->cartas, novoTamanho * sizeof(Carta));
+    if (j->pilha->cartas == NULL && novoTamanho > 0) {
+        printf("Erro ao realocar pilha na reciclagem.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Copia as cartas do descarte para o final da pilha
+    for (int i = 0; i < tamAdicional; i++) {
+        j->pilha->cartas[tamAtual + i] = j->descarte->cartas[i];
+    }
+    j->pilha->tam = novoTamanho;
+
+    // Esvazia a pilha de descarte
+    free(j->descarte->cartas);
+    j->descarte->cartas = NULL;
+    j->descarte->tam = 0;
+
+    // Embaralha a nova pilha de compras
+    embaralhaCartas(j->pilha);
+}
+
+// Função para comprar uma quantidade qtd de cartas
+void compraCartas(Jogador *j, int qtd) {
+    for (int i = 0; i < qtd; i++) {
+        
+        if (j->pilha->tam == 0) {
+            reciclaPilha(j);
+            // conferência caso não tivesse cartas no descarte - não foi reciclado nada
+            if (j->pilha->tam == 0) break; 
+        }
+
+        // Pega a carta do final da pilha
+        int idxTopo = j->pilha->tam - 1;
+        Carta cartaMovida = j->pilha->cartas[idxTopo];
+
+        // Adiciona a carta movida na mão
+        j->mao->tam++;
+        j->mao->cartas = (Carta *) realloc(j->mao->cartas, j->mao->tam * sizeof(Carta));
+        j->mao->cartas[j->mao->tam - 1] = cartaMovida;
+
+        // Remove da pilha (Reduz o tamanho e realoca)
+        j->pilha->tam--;
+        if (j->pilha->tam > 0) {
+            j->pilha->cartas = (Carta *) realloc(j->pilha->cartas, j->pilha->tam * sizeof(Carta));
+        } else {
+            // Se tamanho virou 0, libera o ponteiro e depois recicla a pilha
+            free(j->pilha->cartas);
+            j->pilha->cartas = NULL;
+            reciclaPilha(j);
+        }
+    }
 }
 
 
-void reciclaPilha (){
-    return;
-}
+// Função para descartar todas as cartas da mão do jogaddor
+void descartaMao (Jogador *j){
 
-void embaralha () {
-    return;
-}
+    if (j->mao->tam == 0) return; // Nada para descartar
+
+    int tamAtual = j->descarte->tam;
+    int tamAdicional = j->mao->tam;
+    int novoTamanho = tamAtual + tamAdicional;
+
+    // Realoca as cartas da mao para a pilha de descarte
+    j->descarte->cartas = (Carta *) realloc(j->descarte->cartas, novoTamanho * sizeof(Carta));
+    if (j->descarte->cartas == NULL && novoTamanho > 0) {
+        printf("Erro ao realocar cartas da mao no descarte.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Copia as cartas da mao para o descarte
+    for (int i = 0; i < tamAdicional; i++) {
+        j->descarte->cartas[tamAtual + i] = j->mao->cartas[i];
+    }
+    j->descarte->tam = novoTamanho;
+
+    // Esvazia a pilha de descarte
+    free(j->mao->cartas);
+    j->mao->cartas = NULL;
+    j->mao->tam = 0;
+}  

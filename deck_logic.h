@@ -16,9 +16,9 @@ grupoCarta* criaPilhaVazia();
 void liberaBaralho(grupoCarta *baralho);
 
 // Operações de jogo (prototypes existentes no .c)
-void compraCartas(void);
-void descartaCartas(void);
-void reciclaPilha(void);
-void embaralha(void);
+void embaralhaCartas(grupoCarta *baralho);
+void reciclaPilha(Jogador *j);
+void compraCartas(Jogador *j, int qtd);
+void descartaMao (Jogador *j);
 
 #endif

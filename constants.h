@@ -121,6 +121,7 @@ typedef struct {
 // Definindo o Controle do jogo [Situação]
 typedef struct {
   char *estado;
+  int turnoCount;
   Jogador jog_atv;
   grupoInimigos inim_atv;
   int nivel;    // Contador do núm de combates ou nível
