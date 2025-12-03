@@ -205,7 +205,7 @@ void turnoInimigos (controleCombate *control){
         // Executa a ação
         if (acaoDoTurno.tipoAcao == ATAQUE) {
             // Aplica efeito no jogador e verifica se morreu
-            if (aplicaEfeito(&jog->player, acaoDoTurno.efeito) == 1) {
+            if (aplicaDano(&jog->player, acaoDoTurno.efeito) == 1) {
                 control->estado = "GAMEOVER";
                 return;
             }

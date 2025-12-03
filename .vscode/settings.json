@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "creatures_logic.h": "c",
+        "allegro_image.h": "c",
+        "stdio.h": "c",
+        "allegro_primitives.h": "c",
+        "constants.h": "c"
+    }
+}
