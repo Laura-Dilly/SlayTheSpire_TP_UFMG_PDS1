@@ -313,6 +313,8 @@ void exibirMensagem(controleCombate *c, const char *texto, ALLEGRO_COLOR cor) {
     c->msg.timer = 240; // 4 segundos (60 frames * 5)
 }
 
+
+/*
 void reiniciarJogo(controleCombate *c) {
     // Reseta Status do Jogador
     c->jog_atv.player.ptsVida = c->jog_atv.player.vidaMax; // Cura total
@@ -352,4 +354,5 @@ void reiniciarJogo(controleCombate *c) {
     
     // Mensagem inicial
     exibirMensagem(c, "Você começou uma nova competição!", al_map_rgb(255, 255, 255));
-}
+} 
+*/

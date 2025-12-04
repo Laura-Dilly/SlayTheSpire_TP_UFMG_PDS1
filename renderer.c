@@ -94,7 +94,6 @@ void FillRenderer(Renderer* renderer) {
 
 }
 
-// Modificada para incluir uma imagem POR NÍVEIS no background
 void RenderBackground(Renderer* renderer) {
   al_clear_to_color(al_map_rgb(173,216,230));
 
@@ -235,7 +234,7 @@ void RenderShield(const Renderer *renderer, Criatura *criatura, int x_begin, int
 
 
 void RenderCreature(const Renderer* renderer, int begin_x, int mid_y,
-                    int width, Criatura *criatura, ALLEGRO_COLOR cor, int lado_escudo) {
+                    int width, Criatura *criatura, ALLEGRO_COLOR cor, int lado_escudo, int forte) {
   
   // Variáveis auxiliares para tamanho da criatura
   int raio = width;
@@ -247,6 +246,10 @@ void RenderCreature(const Renderer* renderer, int begin_x, int mid_y,
       int bw = al_get_bitmap_width(criatura->img);    // Pega largura original
       int bh = al_get_bitmap_height(criatura->img);   // Pega altura original
       
+      // se o inimigo for forte desenha um retangulo de fundo da imagem
+      if (forte == 1){
+        al_draw_filled_rectangle(begin_x, mid_y - raio, (begin_x + diametro), (mid_y + raio), cor);
+      }      
       // Desenha com escala ajustada para caber exatamente no quadrado do diâmetro
       al_draw_scaled_bitmap(criatura->img,
                             0, 0, bw, bh,              // Origem
@@ -427,12 +430,14 @@ void RenderEnemies(Renderer* renderer) {
 
             // Define a cor da borda para inimigo forte
             ALLEGRO_COLOR cor = al_map_rgb(0,0,0);    // preto
+            int forte = 0;
             if (inim->tipo == FORTE){
-              cor = al_map_rgb(60,24,176);    // roxo
+              forte = 1;
+              cor = al_map_rgb(255,166,175);    // vermelho-claro
             }
 
             // Desenha o Inimigo
-            RenderCreature(renderer, x_pos, y_pos, radius, inim->enemy, cor, i);
+            RenderCreature(renderer, x_pos, y_pos, radius, inim->enemy, cor, i, forte);
             
             // Desenha o nome do inimigo acima da imagem
             char nome[50];
@@ -577,7 +582,7 @@ void RenderEnd(Renderer* renderer) {
     // Limpa a tela (Fundo Preto)
     al_clear_to_color(al_map_rgb(0, 0, 0));
 
-    // 2. Configura o Texto Gigante
+    // Configura o Texto Gigante
     float escala = 8.0;
 
     // Desenha "YOU WON!" no centro exato
@@ -588,7 +593,7 @@ void RenderEnd(Renderer* renderer) {
                            escala, escala, 
                            "YOU LOST! ...");
 
-    // Texto Secundário (dividido em 2 chamadas para evitar erro de quebra de linha)
+    // Texto Secundário (dividido em 2 chamadas - quebra de linha)
     DrawCenteredScaledText(renderer->font, al_map_rgb(255, 255, 255), 
                            (DISPLAY_WIDTH / 2.0) / 2.0, (DISPLAY_HEIGHT / 2.0) / 2.0, 
                            2.0, 2.0, "No amount of autotune");
@@ -602,33 +607,26 @@ void RenderEnd(Renderer* renderer) {
 
 void Render(Renderer* renderer) {
   al_set_target_bitmap(renderer->display_buffer);
-  if (strcmp(renderer->combate->estado, "GAMEOVER") == 0) {
-      RenderEnd(renderer); // Tela de derrota
-  } 
-  else if (strcmp(renderer->combate->estado, "VITORIA") == 0) {
-      RenderVictory(renderer); // Chama a tela de vitória
-  } 
-  else {
-    RenderBackground(renderer);
-    RenderLevelInfo(renderer);
-    RenderDeck(renderer, DRAW_DECK_X, DRAW_DECK_Y, "BARALHO");
-    RenderDeck(renderer, DISCARD_DECK_X, DISCARD_DECK_Y, "DESCARTE");
-    RenderCreature(renderer, PLAYER_BEGIN_X, PLAYER_BEGIN_Y + PLAYER_RADIUS,
-                  PLAYER_RADIUS, &renderer->combate->jog_atv.player, al_map_rgb(0,0,0), 1);
-    RenderEnergy(renderer);
-    RenderEnemies(renderer);
-    RenderPlayerHand(renderer);
-    if (renderer->combate->msg.timer > 0) {
-      RenderMsgTela(renderer);
-    }
-    al_set_target_backbuffer(renderer->display);
-
-    al_draw_scaled_bitmap(renderer->display_buffer, 0, 0, DISPLAY_BUFFER_WIDTH,
-                          DISPLAY_BUFFER_HEIGHT, 0, 0, DISPLAY_WIDTH,
-                          DISPLAY_HEIGHT, 0);
-
-    al_flip_display();
+  RenderBackground(renderer);
+  RenderLevelInfo(renderer);
+  RenderDeck(renderer, DRAW_DECK_X, DRAW_DECK_Y, "BARALHO");
+  RenderDeck(renderer, DISCARD_DECK_X, DISCARD_DECK_Y, "DESCARTE");
+  RenderCreature(renderer, PLAYER_BEGIN_X, PLAYER_BEGIN_Y + PLAYER_RADIUS,
+                PLAYER_RADIUS, &renderer->combate->jog_atv.player, al_map_rgb(0,0,0), 1, 0);
+  RenderEnergy(renderer);
+  RenderEnemies(renderer);
+  RenderPlayerHand(renderer);
+  if (renderer->combate->msg.timer > 0) {
+    RenderMsgTela(renderer);
   }
+  al_set_target_backbuffer(renderer->display);
+
+  al_draw_scaled_bitmap(renderer->display_buffer, 0, 0, DISPLAY_BUFFER_WIDTH,
+                        DISPLAY_BUFFER_HEIGHT, 0, 0, DISPLAY_WIDTH,
+                        DISPLAY_HEIGHT, 0);
+
+  al_flip_display();
+  
 }
 
 void ClearRenderer(Renderer* renderer) {

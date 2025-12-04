@@ -76,16 +76,19 @@ int main() {
         controleCombate* combate = renderer.combate;
         
         // Tela de perda ou vitória
-        if (strcmp(combate->estado, "GAMEOVER") == 0 || strcmp(combate->estado, "VITORIA") == 0) {
-            
-            // Tecla R: Reinicia o Jogo
-            if (event.keyboard.keycode == ALLEGRO_KEY_R) {
-                reiniciarJogo(combate);
-            }
-            // Tecla Q: Sair
+        if (strcmp(combate->estado, "GAMEOVER") == 0) {
+          exibirMensagem(combate, "Voce PERDEU! Aperte Q para sair.", al_map_rgb(255, 50, 50));
+          // Tecla Q: Sair
             if (event.keyboard.keycode == ALLEGRO_KEY_Q) {
                 done = 1;
             }
+        } else if (strcmp(combate->estado, "VITORIA") == 0){
+          exibirMensagem(combate, "Voce GANHOU! Aperte Q para sair.", al_map_rgb(255, 50, 50));
+          // Tecla Q: Sair
+            if (event.keyboard.keycode == ALLEGRO_KEY_Q) {
+                done = 1;
+            }
+            
         } else if (strcmp(combate->estado, "VEZ_JOGADOR") == 0) {        // Se o estado do jogo for a vez do jogador... 
           
           // ESTADO DE ESCOLHER A CARTA:
@@ -153,6 +156,13 @@ int main() {
             // Tecla X: Vida do jogador vira 1
             if (event.keyboard.keycode == ALLEGRO_KEY_X) {
               combate->jog_atv.player.ptsVida = 1;
+            }
+
+             // PROVA ALLEGRO: Tecla C - "ao apertar C, um inimigo aleatório sofre um dano de entre 1 e 3 pontos de vida"
+            if (event.keyboard.keycode == ALLEGRO_KEY_C) {
+              int idxIn = rand() % 2;       // índice do inimigo afetado -- aleatório entre 0 e 1 (são dois inimigos no turno)
+              int dano = rand() % 3 + 1;    // dano aleatório entre 1 e 3 ao inimigo
+              combate->inim_atv.inimigos[idxIn].enemy->ptsVida -= dano;
             }
           
           
