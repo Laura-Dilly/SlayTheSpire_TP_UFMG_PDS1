@@ -67,6 +67,7 @@ Jogador* geraJogador(Criatura *opcoes, int escolha) {
     jog->energia = 3; 
     jog->energiaMax = 3;
     jog->pilha = geraBaralhoInicial(); // Baralho de compras cheio
+    embaralhaCartas(jog->pilha);
     jog->mao = criaPilhaVazia();     // Mão vazia
     jog->descarte = criaPilhaVazia(); // Descarte vazio
     jog->vitorias = 0;
@@ -124,10 +125,10 @@ NomesInimigos *geraNomesInimigos(void) {
     NomesInimigos *ni = (NomesInimigos *) malloc(sizeof(NomesInimigos));
 
     // LEITURA DOS NOMES
-    ni->nome = malloc(20 * sizeof(char*));
+    ni->nome = malloc(17 * sizeof(char*));
     char linha[256];
     int idx = 0;
-    while(fgets(linha, sizeof(linha), nomes) != NULL && idx < 20){
+    while(fgets(linha, sizeof(linha), nomes) != NULL && idx < 17){
         linha[strcspn(linha, "\n")] = '\0';
         ni->nome[idx] = malloc(strlen(linha) + 1);
         strcpy(ni->nome[idx], linha);
@@ -136,10 +137,11 @@ NomesInimigos *geraNomesInimigos(void) {
     ni->totalNomes = idx;
 
     // LEITURA DOS NOMES DE ARQUIVOS DAS IMAGENS
-    ni->imag = malloc(20 * sizeof(char*));    
+    ni->imag = malloc(17 * sizeof(char*));    
     int idx_img = 0;
-    while(fgets(linha, sizeof(linha), imgs) != NULL && idx_img < 20){
-        linha[strcspn(linha, "\n")] = '\0';      
+    while(fgets(linha, sizeof(linha), imgs) != NULL && idx_img < 17){
+        linha[strcspn(linha, "\n")] = '\0';
+        linha[strcspn(linha, "\r")] = '\0';  
         
         ni->imag[idx_img] = malloc(strlen(linha) + 1);
         strcpy(ni->imag[idx_img], linha);

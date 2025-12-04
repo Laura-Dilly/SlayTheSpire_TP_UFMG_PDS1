@@ -111,7 +111,7 @@ void jogaCarta (controleCombate *control, int index_carta){
 
   // Só permitir jogar a carta se custo desta for menor que energia
   if (c.custo > j->energia){
-    printf("Você não possui energia suficiente para jogar essa carta.");
+    exibirMensagem(control, "Voce nao possui energia suficiente para usar esta carta! Tente outra carta ou passe a vez (ESC).", al_map_rgb(255, 50, 50));
     return;
   } else {
     // já diminuir custo da energia
@@ -141,37 +141,85 @@ void jogaCarta (controleCombate *control, int index_carta){
       j->mao->cartas = NULL;
   }
 
-  // CARTA DE ATAQUE: aplicar os efeitos da carta sobre o inimigo
+  int causouDano;
   if (c.tipo == ATAQUE){
+    aplicaDano(i->enemy, c.efeito);
+    causouDano = 1;
+  }
+
+  if (c.tipo == ESPECIAL){
+    aplicaDano(i->enemy, c.efeito);
+    causouDano = 1;
+    descartaMao(j);
+    compraCartas(j, 5);
+  }
+
+  // CARTA DE ATAQUE: aplicar os efeitos da carta sobre o inimigo
+  if (causouDano){
     // Se o inimigo morrer, troca o index para o próximo inimigo
     // Se não tiver próx inimigo (2 por nível), muda de nível e retorna index p primeiro inimigo do nível
-    if(aplicaDano(i->enemy, c.efeito) == 1){
-      control->indiceInimigoAtual++;
-      if(control->indiceInimigoAtual >= 2){
-        control->nivel++;
-        control->indiceInimigoAtual = 0;
-      }
+         
+    // Verifica se há inimigos vivos
+    int vivos = 0;
+    for(int k = 0; k < control->inim_atv.qtd; k++){
+        if(control->inim_atv.inimigos[k].enemy->ptsVida > 0) {
+            vivos++;
+        }
+    }
+
+    // Se não tiver inimigos vivos -> Passa de Nível
+    if (vivos == 0) {
+      // Incrementa o nível
+      control->nivel++;
+      // Verifica se ultrapassou de 10 níveis (obs: 1 a 10)
+      if (control->nivel > 10) {
+              control->estado = "VITORIA"; // Muda o estado para desenhar a tela final
+              exibirMensagem(control, "PARABENS! O PREMIO É SEU!", al_map_rgb(255, 215, 0));
+              return; // Encerra a função aqui, NÃO gera novos inimigos
+          }
+
+        exibirMensagem(control, "Você venceu! Novos inimigos a caminho...", al_map_rgb(50, 255, 50));
+        descartaMao(j);             // descarta as cartas para nova rodada
+        control->turnoCount = 0;    // reinicia o contador de turnos
+        iniciaTurnoJogador(j);      // reseta energia escudo etc
+        control->indiceInimigoAtual = 0; // Reseta para o primeiro
+
+        // Limpeza de memória dos inimigos mortos
+        for(int k=0; k < control->inim_atv.qtd; k++){
+              if(control->inim_atv.inimigos[k].enemy->img)
+                al_destroy_bitmap(control->inim_atv.inimigos[k].enemy->img);  //limpa imagem
+              if(control->inim_atv.inimigos[k].enemy->nome)
+                free(control->inim_atv.inimigos[k].enemy->nome);  //limpa nome
+              if(control->inim_atv.inimigos[k].enemy)
+                free(control->inim_atv.inimigos[k].enemy);  //limpa struct Criatura
+              if(control->inim_atv.inimigos[k].acoes)
+                free(control->inim_atv.inimigos[k].acoes);  //limpa a struct de ações
+        }
+        if(control->inim_atv.inimigos) free(control->inim_atv.inimigos);  //limpa os inimigos
+        
+        // Chama a função que cria um novo grupo baseado na lista global e no contador
+        grupoInimigos *novoGp = geraGrupoInimigos(control->listainimigos, &control->contadorInimigos);
+        
+        // Copia o novo grupo para a struct de controle
+        control->inim_atv = *novoGp; 
+        
+        // Libera o ponteiro temporário
+        free(novoGp); 
+
+    } 
+    // Se ainda tem inimigos vivos -> Troca alvo
+    else {
+        if (control->inim_atv.inimigos[control->indiceInimigoAtual].enemy->ptsVida <= 0) {
+              // Troca para o próximo (inverte 0 e 1)
+              control->indiceInimigoAtual = (control->indiceInimigoAtual + 1) % 2;
+        }
     }
   }
+  
 
   // CARTA DE DEFESA: aplicar os efeitos da carta sobre o escudo do jogador
   if (c.tipo == DEFESA){
     j->player.ptsEscudo += c.efeito;
-  }
-
-  // CARTA ESPECIAL: 
-  if (c.tipo == ESPECIAL){
-    // aplica o dano
-    if(aplicaDano(i->enemy, c.efeito) == 1){
-      control->indiceInimigoAtual++;
-      if(control->indiceInimigoAtual >= 2){
-        control->nivel++;
-        control->indiceInimigoAtual = 0;
-      }
-    }
-    // descarta a mão do jogador e compra 5 cartas da pilha
-    descartaMao(j);
-    compraCartas(j, 5);
   }
 
   return;
@@ -185,6 +233,9 @@ void turnoInimigos (controleCombate *control){
     // Separa os inimigos e o jogador
     grupoInimigos *gp = &control->inim_atv;
     Jogador *jog = &control->jog_atv;
+
+    // Texto que será exibido ao final
+    char relatorioTurno[256] = "";
 
     // Loop por todos os inimigos do grupo (2)
     for (int i = 0; i < gp->qtd; i++) {
@@ -201,19 +252,48 @@ void turnoInimigos (controleCombate *control){
         // Define a ação que será executada com base no turno atual e na qtd de ações do inimigo
         int indiceAcao = control->turnoCount % atual->qtdAcoes;
         acao acaoDoTurno = atual->acoes[indiceAcao];
-
+        
         // Executa a ação
-        if (acaoDoTurno.tipoAcao == ATAQUE) {
+        if (acaoDoTurno.tipoAcao == ATAQUE) {     
+            // Salva status ANTES do dano - para a mensagem final
+            int escudoAntes = jog->player.ptsEscudo;
+            int vidaAntes = jog->player.ptsVida;
+
             // Aplica efeito no jogador e verifica se morreu
             if (aplicaDano(&jog->player, acaoDoTurno.efeito) == 1) {
                 control->estado = "GAMEOVER";
                 return;
             }
+            
+            // Calcula o quanto perdeu
+            int escudoPerdido = escudoAntes - jog->player.ptsEscudo;
+            int vidaPerdida = vidaAntes - jog->player.ptsVida;
+
+            // Adiciona ao texto da mensagem a ser exibida
+            // Ex: "Manu atacou: -10 Escudo, -5 Vida. "
+            char acaoMsg[100];
+            if (escudoPerdido == 0){
+            sprintf(acaoMsg, "%s atacou: -%d Vida. \n", 
+                    atual->enemy->nome, vidaPerdida);
+            strcat(relatorioTurno, acaoMsg);
+            } else {
+            sprintf(acaoMsg, "%s atacou: -%d Escudo, -%d Vida. \n", 
+                    atual->enemy->nome, escudoPerdido, vidaPerdida);
+            strcat(relatorioTurno, acaoMsg);             
+            }          
+  
         } else if (acaoDoTurno.tipoAcao == DEFESA) {
             // aumenta os pontos de escudo
             atual->enemy->ptsEscudo += acaoDoTurno.efeito;
+            // monta mensagem do inimigo e adiciona à lista
+            char acaoMsg[100];
+            sprintf(acaoMsg, "%s defendeu (+%d escudo).", atual->enemy->nome, acaoDoTurno.efeito);
+            strcat(relatorioTurno, acaoMsg);
         }
     }
+
+    // Exibe as mensagens de todos os inimigos
+    exibirMensagem(control, relatorioTurno, al_map_rgb(255, 255, 100));
 
     // Incrementa o contador de turnos do inimigo
     control->turnoCount++;
@@ -221,4 +301,55 @@ void turnoInimigos (controleCombate *control){
     // Passa o estado da vez pro jogador
     control->estado = "VEZ_JOGADOR";
     iniciaTurnoJogador(jog);
+}
+
+// Função auxiliar para configurar a mensagem de exibição na tela
+void exibirMensagem(controleCombate *c, const char *texto, ALLEGRO_COLOR cor) {
+    if (!c) return;
+    
+    // Copia os parametros pra struct de controle e define um tempo padrão
+    snprintf(c->msg.texto, sizeof(c->msg.texto), "%s", texto);
+    c->msg.cor = cor;
+    c->msg.timer = 240; // 4 segundos (60 frames * 5)
+}
+
+void reiniciarJogo(controleCombate *c) {
+    // Reseta Status do Jogador
+    c->jog_atv.player.ptsVida = c->jog_atv.player.vidaMax; // Cura total
+    c->jog_atv.player.ptsEscudo = 0;
+    c->jog_atv.energia = 3;
+    
+    // Reseta Nível e Turnos
+    c->nivel = 1;
+    c->turnoCount = 0;
+    c->estado = "VEZ_JOGADOR";
+    c->selecionandoAlvo = 0;
+    c->selected_card_idx = 0;
+    
+    // Reseta Baralho (Recolhe mão e descarte de volta pro deck)
+    descartaMao(&c->jog_atv);   // Joga mao no descarte
+    reciclaPilha(&c->jog_atv);  // Joga descarte no deck e embaralha
+    
+    // Compra mão inicial (5 cartas)
+    iniciaTurnoJogador(&c->jog_atv);
+
+    // Limpa Inimigos Antigos (se houver) e Gera Novos
+    if (c->inim_atv.inimigos != NULL) {
+        // Limpeza manual rápida
+        for(int k=0; k < c->inim_atv.qtd; k++){
+            if(c->inim_atv.inimigos[k].enemy->img) al_destroy_bitmap(c->inim_atv.inimigos[k].enemy->img);
+            if(c->inim_atv.inimigos[k].enemy->nome) free(c->inim_atv.inimigos[k].enemy->nome);
+            free(c->inim_atv.inimigos[k].enemy);
+            free(c->inim_atv.inimigos[k].acoes);
+        }
+        free(c->inim_atv.inimigos);
+    }
+
+    c->contadorInimigos = 0; // Reinicia a seed de escolha
+    grupoInimigos *gp = geraGrupoInimigos(c->listainimigos, &c->contadorInimigos);
+    c->inim_atv = *gp;
+    free(gp);
+    
+    // Mensagem inicial
+    exibirMensagem(c, "Você começou uma nova competição!", al_map_rgb(255, 255, 255));
 }

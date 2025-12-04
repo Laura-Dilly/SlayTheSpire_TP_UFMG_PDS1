@@ -1,5 +1,5 @@
 clean:
-	rm *.out
+	rm *.exe
 
 game:
 	gcc main.c -o game.exe \

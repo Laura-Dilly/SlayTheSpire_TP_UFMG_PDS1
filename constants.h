@@ -16,6 +16,9 @@
 #define DRAW_DECK_X 20
 #define DRAW_DECK_Y 700
 
+#define DISCARD_DECK_X 20
+#define DISCARD_DECK_Y 350
+
 #define DECK_WIDTH 200
 #define DECK_HEIGHT 300
 
@@ -118,6 +121,13 @@ typedef struct {
   Inimigo *inimigos;
 } grupoInimigos;
 
+// Sistema de controle de mensagens exibidas na tela
+typedef struct {
+    char texto[256];       // O conteúdo da mensagem
+    ALLEGRO_COLOR cor;     // A cor da mensagem
+    int timer;             // Quanto tempo ela fica na tela (em frames)
+} SistemaMensagem;
+
 // Definindo o Controle do jogo [Situação]
 typedef struct {
   char *estado;
@@ -127,6 +137,11 @@ typedef struct {
   int nivel;    // Contador do núm de combates ou nível
   int indiceInimigoAtual;
   NomesInimigos *listainimigos;
+  int contadorInimigos;
+  int selected_card_idx;
+  int selecionandoAlvo; // selecionar inimigo ou carta --> 0 é carta, 1 é inimigo
+  SistemaMensagem msg;
+
 } controleCombate;
 
 

@@ -22,7 +22,9 @@ void jogaCarta (controleCombate *control, int index_carta);
 
 void turnoInimigos (controleCombate *control);
 
+void exibirMensagem(controleCombate *c, const char *texto, ALLEGRO_COLOR cor);
 
+void reiniciarJogo(controleCombate *c);
 
 
 
