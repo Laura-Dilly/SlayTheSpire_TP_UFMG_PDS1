@@ -4,7 +4,8 @@
 Este projeto é uma implementação simplificada do jogo Slay the Spire, desenvolvida em linguagem C utilizando a biblioteca gráfica Allegro 5.
 
 ## Sobre o Jogo
-Trata-se de um jogo de cartas e estratégia por turnos, onde o jogador deve enfrentar 10 níveis de combate consecutivos, gerenciando sua energia, pontos de vida e baralho de cartas.
+A base de Slay the Spire é um jogo de cartas e estratégia por turnos, onde o jogador deve enfrentar 10 níveis de combate consecutivos, gerenciando sua energia, pontos de vida e baralho de cartas. 
+No caso deste projeto, foi desenvolvida uma espécie de competição musical como "The Voice", inspirada na ideia do jogo Slay the Spire. Nesse caso, o personagem batalha contra outros cantores escolhendo ritmos musicais para "atacar" ou "se defender" (ou, no caso das cartas especiais, para reembaralhar suas opções). 
 
 ## Estrutura do Projeto
 ```
