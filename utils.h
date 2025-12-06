@@ -16,6 +16,8 @@ void ShuffleArray(int* array, int size);
 
 void iniciaTurnoJogador (Jogador *jog);
 
+void passaNivel (controleCombate *control);
+
 int aplicaDano (Criatura *target, int dano);
 
 void jogaCarta (controleCombate *control, int index_carta);

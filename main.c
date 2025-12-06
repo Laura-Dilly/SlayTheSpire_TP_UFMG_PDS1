@@ -113,17 +113,17 @@ int main() {
             if (event.keyboard.keycode == ALLEGRO_KEY_ENTER && tam_mao > 0) {
                       Carta c = combate->jog_atv.mao->cartas[combate->selected_card_idx];
 
-                      // Se for defesa aplica a carta
-                      if (c.tipo == DEFESA) {
+                      // Se for defesa ou especial aplica a carta
+                      if (c.tipo == DEFESA || c.tipo == ESPECIAL) {
                           jogaCarta(combate, combate->selected_card_idx);
                           
                           // Voltar o índice da carta selecionada em 1 posição (evitar erros se jogar a última carta)
                           if (combate->selected_card_idx >= combate->jog_atv.mao->tam) 
                               combate->selected_card_idx = combate->jog_atv.mao->tam - 1;
                           if (combate->selected_card_idx < 0) combate->selected_card_idx = 0;
-                      } 
-                      // Se for ataque ou especial --> vai para seleção de inimigo
-                      else {
+                      } else if (c.tipo == ESPECIAL){
+                        jogaCarta(combate, combate->selected_card_idx);
+                      } else {          // Se for ataque --> vai para seleção de inimigo
                           // Verifica se tem energia antes de entrar no modo de mira
                           if (c.custo <= combate->jog_atv.energia) {
                               combate->selecionandoAlvo = 1;
@@ -160,11 +160,25 @@ int main() {
 
              // PROVA ALLEGRO: Tecla C - "ao apertar C, um inimigo aleatório sofre um dano de entre 1 e 3 pontos de vida"
             if (event.keyboard.keycode == ALLEGRO_KEY_C) {
-              int idxIn = rand() % 2;       // índice do inimigo afetado -- aleatório entre 0 e 1 (são dois inimigos no turno)
-              int dano = rand() % 3 + 1;    // dano aleatório entre 1 e 3 ao inimigo
-              combate->inim_atv.inimigos[idxIn].enemy->ptsVida -= dano;
-            }
-          
+              int dano = (rand() + 1) % 3;      // dano aleatório entre 1 e 3
+              int idxIn = rand() % 2;
+              while (combate->inim_atv.inimigos[idxIn].enemy->ptsVida <= 0){
+                idxIn = rand() % 2;  // índice do inimigo aleatório
+              }
+              aplicaDano(combate->inim_atv.inimigos[idxIn].enemy, dano);
+              
+              // Verifica se ainda há algum vivo
+              int vivos = 0;
+                for(int k = 0; k < combate->inim_atv.qtd; k++){
+                    if(combate->inim_atv.inimigos[k].enemy->ptsVida > 0) {
+                        vivos++;
+                    }
+              }
+              // Se não tiver inimigos vivos -> Passa de Nível
+              if (vivos == 0) {
+                passaNivel(combate);
+              } 
+            }      
           
           } else {        // no caso de ser o Estado de selecionar inimigo
             if (event.keyboard.keycode == ALLEGRO_KEY_LEFT || event.keyboard.keycode == ALLEGRO_KEY_RIGHT) {

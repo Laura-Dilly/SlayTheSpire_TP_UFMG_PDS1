@@ -124,7 +124,7 @@ Carta *geraCarta (CartaTipo type, char *name, int cost){
             break;
         }
     } else {
-        card->efeito = (rand() % 21 + 10);     // efeitos possíveis: de 10 a 30
+        card->efeito = 0;     // efeitos da especial: 0
     }
 
     return card;

@@ -295,7 +295,7 @@ void RenderCard(const Renderer* renderer, const Carta *carta, int x_left, int y_
   if (carta->tipo == DEFESA) corFundo = al_map_rgb(200, 200, 255); // Azulado
   if (carta->tipo == ESPECIAL){
     corFundo = al_map_rgb(255, 255, 200); // Amarelado
-    corBorda = al_map_rgb(255, 215, 0); // Borda dourada
+    corBorda = al_map_rgb(255, 215, 3); // Borda dourada
   }
 
   // Desenha o retângulo colorido da carta em sua devida posição
@@ -350,7 +350,7 @@ void RenderCard(const Renderer* renderer, const Carta *carta, int x_left, int y_
   } else if (carta->tipo == DEFESA) {
       sprintf(text, "+%d - escudo", carta->efeito);
   } else {
-      sprintf(text, "Dano: -%d", carta->efeito);
+      sprintf(text, "Reembaralhar");
   }
   DrawScaledText(renderer->font, corTexto, (CARD_WIDTH * 0.1) / xscale,
                  (CARD_HEIGHT * 0.55) / yscale, xscale, yscale,

@@ -97,6 +97,48 @@ int aplicaDano (Criatura *target, int dano){
 }
 
 
+void passaNivel (controleCombate *control){
+  Jogador *j = &control->jog_atv;
+  // Incrementa o nível
+  control->nivel++;
+  // Verifica se ultrapassou de 10 níveis (obs: 1 a 10)
+  if (control->nivel > 10) {
+          control->estado = "VITORIA"; // Muda o estado para desenhar a tela final
+          exibirMensagem(control, "PARABENS! O PREMIO É SEU!", al_map_rgb(255, 215, 0));
+          return; // Encerra a função aqui, NÃO gera novos inimigos
+      }
+
+    exibirMensagem(control, "Você venceu! Novos inimigos a caminho...", al_map_rgb(50, 255, 50));
+    descartaMao(j);             // descarta as cartas para nova rodada
+    control->turnoCount = 0;    // reinicia o contador de turnos
+    iniciaTurnoJogador(j);      // reseta energia escudo etc
+    control->indiceInimigoAtual = 0; // Reseta para o primeiro
+
+    // Limpeza de memória dos inimigos mortos
+    for(int k=0; k < control->inim_atv.qtd; k++){
+          if(control->inim_atv.inimigos[k].enemy->img)
+            al_destroy_bitmap(control->inim_atv.inimigos[k].enemy->img);  //limpa imagem
+          if(control->inim_atv.inimigos[k].enemy->nome)
+            free(control->inim_atv.inimigos[k].enemy->nome);  //limpa nome
+          if(control->inim_atv.inimigos[k].enemy)
+            free(control->inim_atv.inimigos[k].enemy);  //limpa struct Criatura
+          if(control->inim_atv.inimigos[k].acoes)
+            free(control->inim_atv.inimigos[k].acoes);  //limpa a struct de ações
+    }
+    if(control->inim_atv.inimigos) free(control->inim_atv.inimigos);  //limpa os inimigos
+    
+    // Chama a função que cria um novo grupo baseado na lista global e no contador
+    grupoInimigos *novoGp = geraGrupoInimigos(control->listainimigos, &control->contadorInimigos);
+    
+    // Copia o novo grupo para a struct de controle
+    control->inim_atv = *novoGp; 
+    
+    // Libera o ponteiro temporário
+    free(novoGp); 
+}
+
+
+
 
 void jogaCarta (controleCombate *control, int index_carta){
   
@@ -109,7 +151,7 @@ void jogaCarta (controleCombate *control, int index_carta){
   if (index_carta < 0 || index_carta >= j->mao->tam) return;
   Carta c = j->mao->cartas[index_carta];
 
-  // Só permitir jogar a carta se custo desta for menor que energia
+  // Só permitir jogar a carta se custo desta for menor ou igual a energia
   if (c.custo > j->energia){
     exibirMensagem(control, "Voce nao possui energia suficiente para usar esta carta! Tente outra carta ou passe a vez (ESC).", al_map_rgb(255, 50, 50));
     return;
@@ -147,13 +189,6 @@ void jogaCarta (controleCombate *control, int index_carta){
     causouDano = 1;
   }
 
-  if (c.tipo == ESPECIAL){
-    aplicaDano(i->enemy, c.efeito);
-    causouDano = 1;
-    descartaMao(j);
-    compraCartas(j, 5);
-  }
-
   // CARTA DE ATAQUE: aplicar os efeitos da carta sobre o inimigo
   if (causouDano){
     // Se o inimigo morrer, troca o index para o próximo inimigo
@@ -169,43 +204,7 @@ void jogaCarta (controleCombate *control, int index_carta){
 
     // Se não tiver inimigos vivos -> Passa de Nível
     if (vivos == 0) {
-      // Incrementa o nível
-      control->nivel++;
-      // Verifica se ultrapassou de 10 níveis (obs: 1 a 10)
-      if (control->nivel > 10) {
-              control->estado = "VITORIA"; // Muda o estado para desenhar a tela final
-              exibirMensagem(control, "PARABENS! O PREMIO É SEU!", al_map_rgb(255, 215, 0));
-              return; // Encerra a função aqui, NÃO gera novos inimigos
-          }
-
-        exibirMensagem(control, "Você venceu! Novos inimigos a caminho...", al_map_rgb(50, 255, 50));
-        descartaMao(j);             // descarta as cartas para nova rodada
-        control->turnoCount = 0;    // reinicia o contador de turnos
-        iniciaTurnoJogador(j);      // reseta energia escudo etc
-        control->indiceInimigoAtual = 0; // Reseta para o primeiro
-
-        // Limpeza de memória dos inimigos mortos
-        for(int k=0; k < control->inim_atv.qtd; k++){
-              if(control->inim_atv.inimigos[k].enemy->img)
-                al_destroy_bitmap(control->inim_atv.inimigos[k].enemy->img);  //limpa imagem
-              if(control->inim_atv.inimigos[k].enemy->nome)
-                free(control->inim_atv.inimigos[k].enemy->nome);  //limpa nome
-              if(control->inim_atv.inimigos[k].enemy)
-                free(control->inim_atv.inimigos[k].enemy);  //limpa struct Criatura
-              if(control->inim_atv.inimigos[k].acoes)
-                free(control->inim_atv.inimigos[k].acoes);  //limpa a struct de ações
-        }
-        if(control->inim_atv.inimigos) free(control->inim_atv.inimigos);  //limpa os inimigos
-        
-        // Chama a função que cria um novo grupo baseado na lista global e no contador
-        grupoInimigos *novoGp = geraGrupoInimigos(control->listainimigos, &control->contadorInimigos);
-        
-        // Copia o novo grupo para a struct de controle
-        control->inim_atv = *novoGp; 
-        
-        // Libera o ponteiro temporário
-        free(novoGp); 
-
+      passaNivel(control);
     } 
     // Se ainda tem inimigos vivos -> Troca alvo
     else {
@@ -220,6 +219,12 @@ void jogaCarta (controleCombate *control, int index_carta){
   // CARTA DE DEFESA: aplicar os efeitos da carta sobre o escudo do jogador
   if (c.tipo == DEFESA){
     j->player.ptsEscudo += c.efeito;
+  }
+
+  // CARTA ESPECIAL: reembaralha
+  if (c.tipo == ESPECIAL){
+    descartaMao(j);
+    compraCartas(j, 5);
   }
 
   return;
